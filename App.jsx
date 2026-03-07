@@ -1,564 +1,501 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const data = [
-  {
-    negara: "Vietnam", flag: "🇻🇳",
-    historis: { skor: 4, label: "Kuat", sub: "Organik" },
-    ketimpangan: { skor: 4, label: "Rendah", sub: "Gini ~35" },
-    socialMobility: { skor: 3, label: "Menengah", sub: "WEF ~53.1 / 100" },
-    strukturKerja: { skor: 4, label: "Formal", sub: "Dominan" },
-    infrastruktur: { skor: 3, label: "Menengah", sub: "Sistem komunitas" },
-    healthSpending: { skor: 2, label: "Rendah", sub: "~$171/kapita" },
-    sars: { kena: true, label: "Ya", sub: "2003 — 1st bebas SARS" },
-    nakes: { skor: 3, label: "Menengah", sub: "~8 per 1.000 pddk" },
-    bedRatio: { skor: 3, label: "Menengah", sub: "~2.6 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~31 tahun" },
-    covid: { skor: 5, label: "Sangat Baik", anomali: false },
-    catatan: "Berhasil bukan karena spending tinggi — tapi karena modal sosial komunitas organik. tổ dân phố jadi tulang punggung tracing. Spending $171/kapita tapi berhasil mengalahkan negara dengan spending 60x lebih besar.",
-  },
-  {
-    negara: "Korea Selatan", flag: "🇰🇷",
-    historis: { skor: 5, label: "Sangat Kuat", sub: "Organik — Gwangju" },
-    ketimpangan: { skor: 3, label: "Menengah", sub: "Gini ~31" },
-    socialMobility: { skor: 4, label: "Tinggi", sub: "WEF ~74.1 / 100" },
-    strukturKerja: { skor: 4, label: "Formal", sub: "Dominan" },
-    infrastruktur: { skor: 4, label: "Kuat", sub: "Universal coverage" },
-    healthSpending: { skor: 4, label: "Tinggi", sub: "~$3.405/kapita" },
-    sars: { kena: true, label: "Ya", sub: "2003 — traumatik" },
-    nakes: { skor: 5, label: "Sangat Tinggi", sub: "~23 per 1.000 pddk" },
-    bedRatio: { skor: 5, label: "Tertinggi OECD", sub: "~12.4 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~44 tahun" },
-    covid: { skor: 5, label: "Sangat Baik", anomali: false },
-    catatan: "SARS 2003 mempermalukan Korea — CDC diperkuat drastis pasca itu. Civic memory Gwangju + organisasi sipil matang + drive-thru testing masif. Satu-satunya negara yang kuat di hampir semua variabel sekaligus.",
-  },
-  {
-    negara: "Taiwan", flag: "🇹🇼",
-    historis: { skor: 4, label: "Kuat", sub: "Organik" },
-    ketimpangan: { skor: 4, label: "Rendah", sub: "Gini ~34" },
-    socialMobility: { skor: 4, label: "Tinggi", sub: "WEF ~70 / 100 (est.)" },
-    strukturKerja: { skor: 4, label: "Formal", sub: "Dominan" },
-    infrastruktur: { skor: 5, label: "Sangat Kuat", sub: "NHI universal" },
-    healthSpending: { skor: 4, label: "Tinggi", sub: "~$1.810/kapita" },
-    sars: { kena: true, label: "Ya", sub: "2003 — 73 meninggal" },
-    nakes: { skor: 5, label: "Sangat Tinggi", sub: "~21 per 1.000 pddk" },
-    bedRatio: { skor: 5, label: "Sangat Tinggi", sub: "~7.0 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~42 tahun" },
-    covid: { skor: 5, label: "Sangat Baik", anomali: false },
-    catatan: "NHI terintegrasi dengan data perjalanan real-time — kartu NHI langsung terhubung riwayat perjalanan saat COVID. SARS trauma menghasilkan SOP yang diaktifkan tanpa debat.",
-  },
-  {
-    negara: "Jepang", flag: "🇯🇵",
-    historis: { skor: 4, label: "Kuat", sub: "Konformitas tinggi" },
-    ketimpangan: { skor: 4, label: "Rendah", sub: "Gini ~32" },
-    socialMobility: { skor: 5, label: "Sangat Tinggi", sub: "WEF ~76.1 / 100" },
-    strukturKerja: { skor: 4, label: "Formal", sub: "Dominan" },
-    infrastruktur: { skor: 5, label: "Sangat Kuat", sub: "Universal" },
-    healthSpending: { skor: 5, label: "Sangat Tinggi", sub: "~$4.360/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "0 kasus SARS" },
-    nakes: { skor: 5, label: "Sangat Tinggi", sub: "~25 per 1.000 pddk" },
-    bedRatio: { skor: 5, label: "Tertinggi Dunia", sub: "~13.1 per 1.000" },
-    medianUsia: { skor: 1, label: "Sangat Tua", sub: "~49 tahun" },
-    covid: { skor: 4, label: "Baik", anomali: false },
-    catatan: "Bed ratio tertinggi dunia tapi paradoks: banyak bed di RS kecil tidak siap COVID. Tidak kena SARS tapi berhasil karena norma masker + konformitas sosial. Populasi sangat tua (49 tahun) tapi berhasil karena semua variabel lain sangat kuat.",
-  },
-  {
-    negara: "Jerman", flag: "🇩🇪",
-    historis: { skor: 3, label: "Menengah", sub: "Post-reunifikasi" },
-    ketimpangan: { skor: 4, label: "Rendah", sub: "Gini ~31" },
-    socialMobility: { skor: 5, label: "Sangat Tinggi", sub: "WEF ~78.8 / 100" },
-    strukturKerja: { skor: 5, label: "Formal", sub: "Sangat kuat" },
-    infrastruktur: { skor: 5, label: "Sangat Kuat", sub: "Universal" },
-    healthSpending: { skor: 5, label: "Sangat Tinggi", sub: "~$6.731/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 5, label: "Sangat Tinggi", sub: "~44 per 1.000 pddk" },
-    bedRatio: { skor: 5, label: "Sangat Tinggi", sub: "~8.0 per 1.000" },
-    medianUsia: { skor: 2, label: "Tua", sub: "~47 tahun" },
-    covid: { skor: 4, label: "Baik", anomali: false },
-    catatan: "Merkel (latar sains) komunikasi transparan. Kurzarbeit (subsidi kerja pendek) memungkinkan isolasi tanpa kehilangan pendapatan. Nakes terbanyak per kapita di antara semua negara tabel ini.",
-  },
-  {
-    negara: "New Zealand", flag: "🇳🇿",
-    historis: { skor: 3, label: "Menengah", sub: "Post-colonial" },
-    ketimpangan: { skor: 3, label: "Menengah", sub: "Gini ~33" },
-    socialMobility: { skor: 4, label: "Tinggi", sub: "WEF ~74.4 / 100" },
-    strukturKerja: { skor: 4, label: "Formal", sub: "Dominan" },
-    infrastruktur: { skor: 4, label: "Kuat", sub: "Universal" },
-    healthSpending: { skor: 4, label: "Tinggi", sub: "~$4.028/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 4, label: "Tinggi", sub: "~32 per 1.000 pddk" },
-    bedRatio: { skor: 3, label: "Menengah", sub: "~2.6 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~38 tahun" },
-    covid: { skor: 4, label: "Baik", anomali: false },
-    catatan: "Ardern 'team of 5 million' — kepemimpinan moral kompensasi historis yang tidak sekuat Asia Timur. Bed ratio tidak tinggi tapi tidak pernah kewalahan. Membuktikan komunikasi bermoral bisa jadi pengganti civic memory.",
-  },
-  {
-    negara: "Kuba", flag: "🇨🇺",
-    historis: { skor: 3, label: "Kuat→Retak", sub: "Generasi tua kuat" },
-    ketimpangan: { skor: 4, label: "Rendah", sub: "Gini ~38" },
-    socialMobility: { skor: 4, label: "Tinggi (est.)", sub: "Tidak diukur WEF — est. ~68" },
-    strukturKerja: { skor: 5, label: "Formal", sub: "Dominan negara" },
-    infrastruktur: { skor: 5, label: "Sangat Kuat", sub: "Médico de familia" },
-    healthSpending: { skor: 2, label: "Rendah Absolut", sub: "~$971/kapita (merata)" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 5, label: "Tertinggi Dunia", sub: "~84 per 1.000 pddk" },
-    bedRatio: { skor: 4, label: "Tinggi", sub: "~5.3 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~42 tahun" },
-    covid: { skor: 4, label: "Baik", anomali: false },
-    catatan: "Anomali spending: $971/kapita tapi nakes tertinggi dunia. Médico de familia = dokter tinggal di komunitas yang dilayani. Kembangkan 5 vaksin sendiri meski diembargo 60 tahun. Distribusi > total spending. Antitesis sempurna dari AS.",
-  },
-  {
-    negara: "Singapura", flag: "🇸🇬",
-    historis: { skor: 2, label: "Dikonstruksi", sub: "Top-down" },
-    ketimpangan: { skor: 2, label: "Tinggi (dual)", sub: "Gini ~45 pre-transfer" },
-    socialMobility: { skor: 5, label: "Sangat Tinggi", sub: "WEF ~82.4 / 100" },
-    strukturKerja: { skor: 2, label: "Dual", sub: "Formal utk warga, informal utk migran" },
-    infrastruktur: { skor: 2, label: "Dual", sub: "Kuat utk warga, lemah utk migran" },
-    healthSpending: { skor: 4, label: "Tinggi", sub: "~$2.835/kapita" },
-    sars: { kena: true, label: "Ya", sub: "2003 — 33 meninggal" },
-    nakes: { skor: 4, label: "Tinggi", sub: "~23 per 1.000 pddk" },
-    bedRatio: { skor: 3, label: "Menengah", sub: "~2.5 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~42 tahun" },
-    covid: { skor: 3, label: "Campuran", anomali: false },
-    catatan: "Paradoks terbesar: spending tinggi + nakes tinggi + kena SARS, tapi gagal di dormitori migran. 300.000 pekerja migran yang dieksklusi dari kontrak sosial = titik lemah sistemik. Framework harus berlaku untuk SELURUH populasi.",
-  },
-  {
-    negara: "China", flag: "🇨🇳",
-    historis: { skor: 2, label: "Dikonstruksi", sub: "Propaganda negara" },
-    ketimpangan: { skor: 2, label: "Menengah-Tinggi", sub: "Gini ~38-46" },
-    socialMobility: { skor: 3, label: "Menengah", sub: "WEF ~54.5 / 100" },
-    strukturKerja: { skor: 2, label: "Campuran", sub: "Informal besar" },
-    infrastruktur: { skor: 3, label: "Menengah", sub: "Variatif kota-desa" },
-    healthSpending: { skor: 3, label: "Menengah", sub: "~$535/kapita" },
-    sars: { kena: true, label: "Ya", sub: "Episentrum awal" },
-    nakes: { skor: 3, label: "Menengah", sub: "~20 per 1.000 pddk" },
-    bedRatio: { skor: 4, label: "Tinggi", sub: "~4.3 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~39 tahun" },
-    covid: { skor: 3, label: "Campuran", anomali: false },
-    catatan: "Li Wenliang ditangkap saat peringatkan COVID — informasi tidak mengalir ke atas. Paradoks otoritarianisme: mobilisasi cepat setelah keputusan dibuat, tapi early warning tersumbat. Zero COVID dipertahankan terlalu lama, pembukaan mendadak 2022 = estimasi 1+ juta kematian.",
-  },
-  {
-    negara: "Rusia", flag: "🇷🇺",
-    historis: { skor: 2, label: "Dikonstruksi", sub: "Narasi top-down WW2" },
-    ketimpangan: { skor: 2, label: "Tinggi", sub: "Gini ~36 (oligarki)" },
-    socialMobility: { skor: 4, label: "Tinggi (warisan)", sub: "WEF ~64.3 / 100" },
-    strukturKerja: { skor: 2, label: "Campuran", sub: "Formal tapi rapuh" },
-    infrastruktur: { skor: 2, label: "Warisan Soviet→Lapuk", sub: "Semashko terbengkalai" },
-    healthSpending: { skor: 2, label: "Rendah-Menengah", sub: "~$524/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 4, label: "Tinggi (warisan)", sub: "~4.0 per 1.000 pddk" },
-    bedRatio: { skor: 5, label: "Sangat Tinggi (warisan)", sub: "~8.0 per 1.000" },
-    medianUsia: { skor: 2, label: "Menengah-Tua", sub: "~40 tahun" },
-    covid: { skor: 1, label: "Sangat Buruk", anomali: false },
-    catatan: "PARADOKS INFRASTRUKTUR SOVIET: Bed ratio sangat tinggi warisan Semashko — tapi fasilitasnya lapuk dan terdegradasi setelah privatisasi pasca-1991. Ada secara statistik, tidak berfungsi secara nyata. SPUTNIK V IRONI TERBESAR: Rusia kembangkan vaksin lebih awal dari Pfizer, tapi vaksinasi domestik hanya ~50% — rakyat tidak percaya vaksin buatan pemerintahnya sendiri. Ini konfirmasi bahwa kepercayaan yang dikonstruksi top-down sangat rapuh saat benar-benar dibutuhkan. Data resmi COVID dimanipulasi sistematis — kematian dikategorikan sebagai pneumonia. The Economist estimasi excess mortality 1+ juta jiwa vs ~380.000 angka resmi.",
-  },
-  {
-    negara: "UK", flag: "🇬🇧",
-    historis: { skor: 2, label: "Terfragmentasi", sub: "Post-Brexit" },
-    ketimpangan: { skor: 2, label: "Menengah-Tinggi", sub: "Gini ~35" },
-    socialMobility: { skor: 5, label: "Sangat Tinggi", sub: "WEF ~75.4 / 100" },
-    strukturKerja: { skor: 2, label: "Gig Besar", sub: "Uber, Deliveroo, dll" },
-    infrastruktur: { skor: 3, label: "Menengah", sub: "NHS underfunded" },
-    healthSpending: { skor: 4, label: "Tinggi", sub: "~$4.653/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 4, label: "Tinggi", sub: "~29 per 1.000 pddk" },
-    bedRatio: { skor: 2, label: "Rendah", sub: "~2.5 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~40 tahun" },
-    covid: { skor: 2, label: "Buruk", anomali: false },
-    catatan: "Ironi ganda: spending tinggi + nakes banyak tapi bed ratio terendah di antara negara maju Eropa — akibat dekade underfunding NHS. Partygate (Johnson langgar aturannya sendiri) menghancurkan legitimasi moral. Brexit membelah kepercayaan publik sebelum pandemi.",
-  },
-  {
-    negara: "Amerika Serikat", flag: "🇺🇸",
-    historis: { skor: 1, label: "Sangat Terfragmentasi", sub: "Polarisasi ekstrem" },
-    ketimpangan: { skor: 1, label: "Sangat Tinggi", sub: "Gini ~41" },
-    socialMobility: { skor: 4, label: "Tinggi", sub: "WEF ~70.4 / 100" },
-    strukturKerja: { skor: 1, label: "Gig Masif", sub: "Tanpa jaminan" },
-    infrastruktur: { skor: 1, label: "Tidak Universal", sub: "Tergantung asuransi" },
-    healthSpending: { skor: 5, label: "Tertinggi Dunia", sub: "~$11.072/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 4, label: "Tinggi", sub: "~26 per 1.000 pddk" },
-    bedRatio: { skor: 2, label: "Rendah", sub: "~2.8 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah", sub: "~38 tahun" },
-    covid: { skor: 1, label: "Sangat Buruk", anomali: false },
-    catatan: "Bukti paling definitif: spending $11.072/kapita TERTINGGI DI DUNIA tapi COVID outcome terburuk di antara negara maju. Bed ratio rendah karena sistem kesehatan dirancang untuk profit bukan kapasitas cadangan. Masker jadi simbol identitas kultural. 1 juta+ kematian.",
-  },
-  {
-    negara: "Brasil", flag: "🇧🇷",
-    historis: { skor: 1, label: "Lemah", sub: "Terfragmentasi" },
-    ketimpangan: { skor: 1, label: "Sangat Tinggi", sub: "Gini ~53" },
-    socialMobility: { skor: 3, label: "Menengah-Rendah", sub: "WEF ~52.1 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: ">40% informal" },
-    infrastruktur: { skor: 2, label: "Lemah-Menengah", sub: "SUS underfunded" },
-    healthSpending: { skor: 2, label: "Menengah-Rendah", sub: "~$858/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 2, label: "Rendah-Menengah", sub: "~23 per 1.000 (timpang)" },
-    bedRatio: { skor: 3, label: "Menengah", sub: "~2.1 per 1.000" },
-    medianUsia: { skor: 3, label: "Menengah-Muda", sub: "~34 tahun" },
-    covid: { skor: 1, label: "Sangat Buruk", anomali: false },
-    catatan: "Bolsonaro aktif merusak respons — sebut COVID 'gripezinha'. Favela: kepadatan ekstrem membuat social distancing tidak mungkin secara fisik. Bed ratio menengah tapi terdistribusi sangat timpang. Ketimpangan Gini 53 = salah satu tertinggi dunia.",
-  },
-  {
-    negara: "India", flag: "🇮🇳",
-    historis: { skor: 1, label: "Sangat Terfragmentasi", sub: "Kasta + agama + etnis" },
-    ketimpangan: { skor: 1, label: "Sangat Tinggi", sub: "Gini ~35 (undercount)" },
-    socialMobility: { skor: 2, label: "Rendah", sub: "WEF ~45.9 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: ">80% informal" },
-    infrastruktur: { skor: 1, label: "Sangat Timpang", sub: "Kota vs desa ekstrem" },
-    healthSpending: { skor: 1, label: "Sangat Rendah", sub: "~$73/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 1, label: "Sangat Rendah", sub: "~5 per 1.000 pddk" },
-    bedRatio: { skor: 1, label: "Sangat Rendah", sub: "~0.5 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~28 tahun" },
-    covid: { skor: 1, label: "Sangat Buruk", anomali: false },
-    catatan: "Delta 2021: oksigen habis, RS kolaps total, kremasi di jalan. Bed ratio 0.5 per 1.000 terendah untuk negara sebesar ini. Lockdown tanpa jaring pengaman = jutaan pekerja migran jalan kaki ratusan km. Kasta cegah solidaritas horizontal.",
-  },
-  {
-    negara: "Indonesia", flag: "🇮🇩",
-    historis: { skor: 1, label: "Lemah", sub: "Trauma tak terselesaikan" },
-    ketimpangan: { skor: 2, label: "Tinggi", sub: "Gini ~38" },
-    socialMobility: { skor: 2, label: "Rendah", sub: "WEF ~44.7 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: ">55% informal" },
-    infrastruktur: { skor: 2, label: "Lemah", sub: "Puskesmas underfunded" },
-    healthSpending: { skor: 2, label: "Rendah", sub: "~$115/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 1, label: "Rendah", sub: "~0.4 dokter per 1.000" },
-    bedRatio: { skor: 2, label: "Rendah", sub: "~1.0 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~30 tahun" },
-    covid: { skor: 2, label: "Buruk", anomali: false },
-    catatan: "RS Jakarta kolaps saat Delta Juli 2021, pasien meninggal di IGD. Modal sosial vertikal tidak berfungsi dalam krisis horizontal. Nakes dan bed terkonsentrasi di Jawa — luar Jawa sangat kekurangan. JKN ada tapi kualitas timpang.",
-  },
-  {
-    negara: "Filipina", flag: "🇵🇭",
-    historis: { skor: 1, label: "Lemah", sub: "Fragmentasi tinggi" },
-    ketimpangan: { skor: 1, label: "Tinggi", sub: "Gini ~42" },
-    socialMobility: { skor: 2, label: "Rendah", sub: "WEF ~46.0 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: "OFW dependent" },
-    infrastruktur: { skor: 1, label: "Lemah", sub: "Tidak merata" },
-    healthSpending: { skor: 1, label: "Rendah", sub: "~$160/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 2, label: "Rendah", sub: "~6 per 1.000 pddk" },
-    bedRatio: { skor: 2, label: "Rendah", sub: "~1.0 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~24 tahun" },
-    covid: { skor: 1, label: "Sangat Buruk", anomali: false },
-    catatan: "Ironi: eksportir nakes terbesar di dunia tapi kekurangan nakes di dalam negeri. RS Manila kolaps saat Delta. Duterte respons militeristik tanpa fondasi sosial. OFW remitansi berhenti = ekonomi informal kolaps seketika.",
-  },
-  {
-    negara: "Afrika Selatan", flag: "🇿🇦",
-    historis: { skor: 1, label: "Terfragmentasi", sub: "Warisan apartheid" },
-    ketimpangan: { skor: 1, label: "Tertinggi Dunia", sub: "Gini ~63" },
-    socialMobility: { skor: 2, label: "Rendah", sub: "WEF ~43.5 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: "Pengangguran >30%" },
-    infrastruktur: { skor: 1, label: "Timpang Ekstrem", sub: "Dua sistem paralel" },
-    healthSpending: { skor: 2, label: "Menengah-Rendah", sub: "~$499/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 2, label: "Timpang", sub: "~9 per 1.000 (kota vs township)" },
-    bedRatio: { skor: 2, label: "Timpang", sub: "~2.3 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~28 tahun" },
-    covid: { skor: 2, label: "Buruk", anomali: false },
-    catatan: "Apartheid mewariskan segregasi spasial — social distancing tidak mungkin di township padat. Dua sistem kesehatan: privat untuk kaya vs publik kolaps untuk mayoritas. Varian Beta & Omicron pertama terdeteksi di sini.",
-  },
-  {
-    negara: "Pakistan", flag: "🇵🇰",
-    historis: { skor: 1, label: "Sangat Lemah", sub: "Fragmentasi etnis+agama" },
-    ketimpangan: { skor: 2, label: "Tinggi", sub: "Gini ~29-33" },
-    socialMobility: { skor: 1, label: "Sangat Rendah", sub: "WEF ~38.8 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: ">70% informal" },
-    infrastruktur: { skor: 1, label: "Sangat Lemah", sub: "Feodal + urban-rural gap" },
-    healthSpending: { skor: 1, label: "Sangat Rendah", sub: "~$44/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 1, label: "Sangat Rendah", sub: "~1.0 per 1.000 pddk" },
-    bedRatio: { skor: 1, label: "Sangat Rendah", sub: "~0.6 per 1.000" },
-    medianUsia: { skor: 5, label: "Sangat Muda", sub: "~22 tahun" },
-    covid: { skor: 3, label: "Lebih baik dari prediksi", anomali: true },
-    catatan: "ANOMALI DEMOGRAFIS: Semua variabel framework merah — spending $44/kapita terendah di tabel, bed ratio 0.6, fragmentasi etnis Punjabi/Sindhi/Pashtun/Baloch yang dalam. Seharusnya bencana. Yang terjadi: lebih baik dari India dan Brasil. Penjelasan terkuat: (1) median usia 22 tahun — IFR usia muda mendekati nol, (2) underreporting masif karena sistem pencatatan kematian sangat lemah. Imran Khan menolak lockdown ketat karena alasan ekonomi — 'gamble' itu tidak sefatal seharusnya karena populasinya muda.",
-  },
-  {
-    negara: "Bangladesh", flag: "🇧🇩",
-    historis: { skor: 2, label: "Lemah-Menengah", sub: "Kemerdekaan 1971 masih hidup" },
-    ketimpangan: { skor: 2, label: "Tinggi", sub: "Gini ~32-33" },
-    socialMobility: { skor: 2, label: "Rendah", sub: "WEF ~44.5 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: "Garmen + pertanian" },
-    infrastruktur: { skor: 1, label: "Sangat Lemah", sub: "Kepadatan 1.300/km²" },
-    healthSpending: { skor: 1, label: "Sangat Rendah", sub: "~$88/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 1, label: "Sangat Rendah", sub: "~0.6 per 1.000 pddk" },
-    bedRatio: { skor: 1, label: "Sangat Rendah", sub: "~0.8 per 1.000" },
-    medianUsia: { skor: 4, label: "Muda", sub: "~28 tahun" },
-    covid: { skor: 3, label: "Lebih baik dari prediksi", anomali: true },
-    catatan: "ANOMALI TERBESAR: Kepadatan tertinggi dunia (~1.300 orang/km²), spending $88/kapita, bed ratio 0.8 — seharusnya menjadi bencana kemanusiaan terbesar pandemi. Yang terjadi: angka kematian per juta jauh di bawah India dan Brasil. Tiga penjelasan: (1) Populasi muda, (2) program BCG universal — hipotesis proteksi silang, (3) underreporting masif karena sistem pencatatan hampir tidak ada di rural. The Economist estimasi excess mortality jauh lebih tinggi dari angka resmi.",
-  },
-  {
-    negara: "Nigeria", flag: "🇳🇬",
-    historis: { skor: 1, label: "Sangat Lemah", sub: "250+ etnis" },
-    ketimpangan: { skor: 1, label: "Sangat Tinggi", sub: "Gini ~43" },
-    socialMobility: { skor: 1, label: "Sangat Rendah", sub: "WEF ~36.5 / 100" },
-    strukturKerja: { skor: 1, label: "Informal Masif", sub: ">80% informal" },
-    infrastruktur: { skor: 1, label: "Hampir Tidak Ada", sub: "1 dokter per 6.000 pddk" },
-    healthSpending: { skor: 1, label: "Sangat Rendah", sub: "~$71/kapita" },
-    sars: { kena: false, label: "Tidak", sub: "Tidak terdampak" },
-    nakes: { skor: 1, label: "Sangat Rendah", sub: "~0.4 per 1.000 pddk" },
-    bedRatio: { skor: 1, label: "Sangat Rendah", sub: "~0.5 per 1.000" },
-    medianUsia: { skor: 5, label: "Termuda", sub: "~18 tahun" },
-    covid: { skor: 3, label: "African Paradox", anomali: true },
-    catatan: "AFRICAN PARADOX: WHO prediksi Afrika hancur — tidak terjadi. Nigeria dengan 250+ etnis dan sistem kesehatan hampir tidak ada seharusnya jadi episentrum. Penjelasan: (1) Median usia 18 tahun = IFR mendekati nol untuk mayoritas populasi, (2) kehidupan outdoor ekstensif = ventilasi alami, (3) underreporting sangat masif — kapasitas testing hanya ribuan per hari untuk 220 juta orang. Excess mortality sesungguhnya jauh lebih tinggi dari angka resmi.",
-  },
-];
+// ─── ENGINE ───────────────────────────────────────────────────────────────────
+function compute(s) {
+  const G=s.gini/100, I=s.industrial/100, L=s.stateLed/100, SP=s.spending/100;
+  const score = Math.max(0, Math.min(100,(
+    G*0.30 + I*0.25 + L*0.15 + SP*I*0.28
+    - SP*(1-I)*0.18 - (1-G)*I*0.08 + L*I*0.12
+  )*100));
+  return {
+    score,
+    compliance:    Math.max(0,Math.min(100, G*90+L*10)),
+    supplyChain:   Math.max(0,Math.min(100, I*70+L*30)),
+    fiscalHealth:  Math.max(0,Math.min(100, 100-SP*(1-I)*80)),
+    surgeCapacity: Math.max(0,Math.min(100, I*50+L*35+SP*I*15)),
+    warnings: [
+      SP>0.50&&I<0.35&&"import", G<0.30&&I>0.50&&"polarize",
+      L<0.25&&I>0.60&&"profitleak", SP>0.70&&L<0.30&&"capturedspend",
+    ].filter(Boolean),
+  };
+}
 
-const COLS = [
-  { key: "historis", label: "Historis Kolektif" },
-  { key: "ketimpangan", label: "Ketimpangan" },
-  { key: "socialMobility", label: "Social Mobility" },
-  { key: "strukturKerja", label: "Struktur Kerja" },
-  { key: "infrastruktur", label: "Infra. Primer" },
-  { key: "healthSpending", label: "Health Spending" },
-  { key: "sars", label: "SARS?" },
-  { key: "nakes", label: "Nakes" },
-  { key: "bedRatio", label: "Bed Ratio" },
-  { key: "medianUsia", label: "Median Usia" },
-  { key: "covid", label: "COVID Outcome" },
-];
+const DELTA_SCORE = compute({gini:32,industrial:18,stateLed:24,spending:20}).score;
 
-const skorColor = (s) => {
-  if (s >= 5) return { bg: "#dcfce7", tx: "#14532d", bd: "#86efac" };
-  if (s >= 4) return { bg: "#d1fae5", tx: "#065f46", bd: "#6ee7b7" };
-  if (s >= 3) return { bg: "#fef9c3", tx: "#713f12", bd: "#fde047" };
-  if (s >= 2) return { bg: "#fee2e2", tx: "#7f1d1d", bd: "#fca5a5" };
-  return { bg: "#fecaca", tx: "#450a0a", bd: "#f87171" };
+const PRESETS = {
+  statusquo:    {label:"Status Quo",          sub:"Indonesia 2024",           c:"#d97706", gini:32, industrial:22, stateLed:28, spending:23,
+    note:"Tanpa reformasi struktural, krisis berikutnya hanya soal waktu. Prediksi: kelangkaan oksigen & faskes kolaps dalam 14 hari."},
+  developmental:{label:"Developmental State", sub:"Korea · Vietnam · Taiwan", c:"#16a34a", gini:72, industrial:78, stateLed:74, spending:62,
+    note:"Model Ha-Joon Chang. Vietnam $171/kapita tapi outcome COVID bintang 5 — state-led direction kuat, bukan soal berapa uangnya."},
+  market:       {label:"Market Liberal",      sub:"Privatisasi penuh",        c:"#dc2626", gini:22, industrial:28, stateLed:12, spending:48,
+    note:"AS $11.072/kapita tertinggi dunia, tapi outcome COVID terburuk negara maju. Profit motif + gini tinggi = sistem gagal saat krisis."},
+  nordic:       {label:"Nordic Hybrid",       sub:"Pajak tinggi + jaring",    c:"#7c3aed", gini:82, industrial:65, stateLed:58, spending:78,
+    note:"Bukan sekadar pajak tinggi. Gini rendah membangun kepercayaan sosial organik — rakyat patuh karena sistemnya adil."},
 };
 
-const ageColor = (s) => {
-  if (s >= 5) return { bg: "#ede9fe", tx: "#4c1d95", bd: "#c4b5fd" };
-  if (s >= 4) return { bg: "#f5f3ff", tx: "#5b21b6", bd: "#ddd6fe" };
-  if (s >= 3) return { bg: "#f8fafc", tx: "#475569", bd: "#e2e8f0" };
-  if (s >= 2) return { bg: "#fef3c7", tx: "#78350f", bd: "#fde68a" };
-  return { bg: "#fee2e2", tx: "#7f1d1d", bd: "#fca5a5" };
-};
+// ─── ANIMATED NUMBER ─────────────────────────────────────────────────────────
+function AnimNum({val}) {
+  const [n,setN] = useState(val);
+  const prev = useRef(val);
+  useEffect(() => {
+    const from=prev.current, to=val, t0=Date.now(), dur=450;
+    const tick = () => {
+      const p = Math.min(1,(Date.now()-t0)/dur);
+      const e = 1-Math.pow(1-p,3);
+      setN(Math.round(from+(to-from)*e));
+      if(p<1) requestAnimationFrame(tick); else prev.current=to;
+    };
+    requestAnimationFrame(tick);
+  },[val]);
+  return <>{n}</>;
+}
 
-const mobilityColor = (s) => {
-  if (s >= 5) return { bg: "#ccfbf1", tx: "#134e4a", bd: "#5eead4" };
-  if (s >= 4) return { bg: "#d1fae5", tx: "#065f46", bd: "#6ee7b7" };
-  if (s >= 3) return { bg: "#fef9c3", tx: "#713f12", bd: "#fde047" };
-  if (s >= 2) return { bg: "#fee2e2", tx: "#7f1d1d", bd: "#fca5a5" };
-  return { bg: "#fecaca", tx: "#450a0a", bd: "#f87171" };
-};
+// ─── SYSTEMIC ORB ─────────────────────────────────────────────────────────────
+function SystemicOrb({ score, showDelta, sliders }) {
+  const color   = score>=70 ? "#16a34a" : score>=45 ? "#d97706" : "#dc2626";
+  const colorLt = score>=70 ? "#bbf7d0" : score>=45 ? "#fde68a" : "#fecdd3";
+  const colorGl = score>=70 ? "rgba(22,163,74," : score>=45 ? "rgba(217,119,6," : "rgba(220,38,38,";
+  // pulse speed: critical=fast, healthy=slow
+  const pulseDur = score>=70 ? "3s" : score>=45 ? "2s" : "0.9s";
+  const pulseScale = score>=70 ? "1.04" : score>=45 ? "1.06" : "1.12";
 
-const covidColor = (skor, anomali) => {
-  if (anomali) return { bg: "#e0f2fe", tx: "#0c4a6e", dot: "#0284c7" };
-  if (skor >= 5) return { bg: "#bbf7d0", tx: "#14532d", dot: "#16a34a" };
-  if (skor >= 4) return { bg: "#d1fae5", tx: "#065f46", dot: "#22c55e" };
-  if (skor >= 3) return { bg: "#fef08a", tx: "#713f12", dot: "#ca8a04" };
-  if (skor >= 2) return { bg: "#fecaca", tx: "#7f1d1d", dot: "#dc2626" };
-  return { bg: "#fca5a5", tx: "#450a0a", dot: "#b91c1c" };
-};
+  const CX=220, CY=220, R=220;
 
-const Cell = ({ label, sub, skor, type = "score" }) => {
-  const c = type === "age" ? ageColor(skor) : type === "mobility" ? mobilityColor(skor) : skorColor(skor);
+  // Satellite nodes: position around the orb
+  const nodes = [
+    { key:"gini",      label:"Pemerataan",     val:sliders.gini,      angle:-130, color:"#7c3aed" },
+    { key:"industrial",label:"Basis Industri", val:sliders.industrial,angle:-60,  color:"#0284c7" },
+    { key:"stateLed",  label:"State-Led",      val:sliders.stateLed,  angle:0,    color:"#4f46e5" },
+    { key:"spending",  label:"Spending",       val:sliders.spending,  angle:60,   color:"#0891b2" },
+  ];
+
+  const toRad = d => d*Math.PI/180;
+  const orbR = 78; // orb visual radius
+  const satDist = 150; // distance from center to satellite
+
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.bd}`, borderRadius: 6, padding: "5px 8px", minWidth: 100 }}>
-      <div style={{ color: c.tx, fontSize: 11, fontWeight: 700, lineHeight: 1.3 }}>{label}</div>
-      <div style={{ color: c.tx, fontSize: 10, opacity: 0.65, marginTop: 2, lineHeight: 1.3 }}>{sub}</div>
-    </div>
-  );
-};
+    <div style={{position:"relative", width:440, height:440, margin:"0 auto", flexShrink:0}}>
+      <style>{`
+        @keyframes orbPulse {
+          0%,100% { transform: scale(1); opacity:0.9; }
+          50%      { transform: scale(${pulseScale}); opacity:1; }
+        }
+        @keyframes orbGlow {
+          0%,100% { box-shadow: 0 0 40px 10px ${colorGl}0.18), 0 0 80px 20px ${colorGl}0.08); }
+          50%      { box-shadow: 0 0 60px 20px ${colorGl}0.28), 0 0 120px 40px ${colorGl}0.12); }
+        }
+        @keyframes ripple {
+          0%   { transform:translate(-50%,-50%) scale(1); opacity:0.5; }
+          100% { transform:translate(-50%,-50%) scale(2.2); opacity:0; }
+        }
+        @keyframes dotFloat {
+          0%,100%{ opacity:1; transform:translateY(0); }
+          50%    { opacity:0.4; transform:translateY(-3px); }
+        }
+      `}</style>
 
-const SarsCell = ({ d }) => (
-  <div style={{
-    background: d.kena ? "#dbeafe" : "#f8fafc",
-    border: `1px solid ${d.kena ? "#93c5fd" : "#e2e8f0"}`,
-    borderRadius: 6, padding: "5px 8px", minWidth: 80,
-  }}>
-    <div style={{ color: d.kena ? "#1e40af" : "#94a3b8", fontSize: 11, fontWeight: 700 }}>
-      {d.kena ? "✓ Ya" : "— Tidak"}
-    </div>
-    <div style={{ color: d.kena ? "#1e40af" : "#94a3b8", fontSize: 10, opacity: 0.75, marginTop: 2 }}>{d.sub}</div>
-  </div>
-);
+      <svg width="440" height="440" viewBox="0 0 440 440"
+        style={{position:"absolute",top:0,left:0,overflow:"visible"}}>
 
-const CovidCell = ({ d }) => {
-  const c = covidColor(d.skor, d.anomali);
-  return (
-    <div style={{ background: c.bg, border: `1px solid ${c.dot}50`, borderRadius: 6, padding: "5px 10px", minWidth: 110 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <div style={{ width: 7, height: 7, borderRadius: "50%", background: c.dot, flexShrink: 0 }} />
-        <span style={{ color: c.tx, fontSize: 11, fontWeight: 700 }}>{d.label}</span>
+        {/* Satellite connection lines */}
+        {nodes.map(nd => {
+          const a = toRad(nd.angle);
+          const sx = CX + satDist*Math.cos(a);
+          const sy = CY + satDist*Math.sin(a);
+          const ex = CX + orbR*Math.cos(a);
+          const ey = CY + orbR*Math.sin(a);
+          const strong = nd.val >= 50;
+          return (
+            <g key={nd.key}>
+              <line
+                x1={sx} y1={sy} x2={ex} y2={ey}
+                stroke={nd.color}
+                strokeWidth={strong ? 1.5 : 1}
+                strokeDasharray={strong ? "none" : "4 4"}
+                opacity={0.25 + (nd.val/100)*0.55}
+                style={{transition:"all 0.4s ease"}}
+              />
+              {/* Satellite dot */}
+              <circle cx={sx} cy={sy} r={4 + (nd.val/100)*4}
+                fill={nd.color} opacity={0.15 + (nd.val/100)*0.5}
+                style={{transition:"all 0.4s ease"}}/>
+              {/* Flow particle */}
+              {strong && (
+                <circle r="2.5" fill={nd.color} opacity="0.7">
+                  <animateMotion dur={`${1.5 + Math.random()}s`} repeatCount="indefinite"
+                    path={`M${sx},${sy} L${ex},${ey}`}/>
+                </circle>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Satellite labels */}
+        {nodes.map(nd => {
+          const a = toRad(nd.angle);
+          const lx = CX + (satDist+24)*Math.cos(a);
+          const ly = CY + (satDist+24)*Math.sin(a);
+          const anchor = nd.angle < -90 || nd.angle > 90 ? "end" : nd.angle===0 ? "start" : "middle";
+          return (
+            <g key={nd.key+"lbl"}>
+              <text x={lx} y={ly-5} textAnchor={anchor}
+                fill={nd.color} fontSize="10" fontWeight="700"
+                fontFamily="'DM Mono',monospace" opacity={0.5+(nd.val/100)*0.5}>
+                {nd.label}
+              </text>
+              <text x={lx} y={ly+8} textAnchor={anchor}
+                fill={nd.color} fontSize="11" fontWeight="900"
+                fontFamily="'DM Mono',monospace" opacity={0.5+(nd.val/100)*0.5}>
+                {nd.val}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Delta ghost ring */}
+        {showDelta && (
+          <circle cx={CX} cy={CY} r={orbR+18}
+            fill="none" stroke="#dc2626" strokeWidth="1.5"
+            strokeDasharray="6 4" opacity="0.55">
+            <animate attributeName="opacity" values="0.55;0.2;0.55" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+        )}
+      </svg>
+
+      {/* Ripple rings */}
+      {[0,1,2].map(i=>(
+        <div key={i} style={{
+          position:"absolute", top:"50%", left:"50%",
+          width:orbR*2, height:orbR*2, borderRadius:"50%",
+          border:`1.5px solid ${color}`,
+          animation:`ripple ${pulseDur} ${i*(parseFloat(pulseDur)/3)}s ease-out infinite`,
+          pointerEvents:"none",
+        }}/>
+      ))}
+
+      {/* The Orb */}
+      <div style={{
+        position:"absolute", top:"50%", left:"50%",
+        width:orbR*2, height:orbR*2, borderRadius:"50%",
+        transform:"translate(-50%,-50%)",
+        background:`radial-gradient(circle at 38% 35%, ${colorLt}, ${color}cc 60%, ${color})`,
+        animation:`orbPulse ${pulseDur} ease-in-out infinite, orbGlow ${pulseDur} ease-in-out infinite`,
+        display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+        cursor:"default",
+      }}>
+        <div style={{fontSize:52, fontWeight:900, color:"white",
+          fontFamily:"'DM Mono',monospace", lineHeight:1, textShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>
+          <AnimNum val={Math.round(score)}/>
+        </div>
+        <div style={{fontSize:8, letterSpacing:3, color:"rgba(255,255,255,0.75)",
+          fontFamily:"'DM Mono',monospace", marginTop:3}}>/ 100</div>
       </div>
-      {d.anomali && (
-        <div style={{ color: "#0369a1", fontSize: 9, marginTop: 3, fontWeight: 600 }}>⚠️ Anomali demografis</div>
+
+      {/* Delta label */}
+      {showDelta && (
+        <div style={{position:"absolute", bottom:38, left:"50%", transform:"translateX(-50%)",
+          background:"#fff1f2", border:"1px solid #fecdd3", borderRadius:6,
+          padding:"4px 10px", fontSize:9, color:"#dc2626", fontFamily:"'DM Mono',monospace",
+          fontWeight:700, whiteSpace:"nowrap", opacity:0.9}}>
+          Hantu Delta Jul'21 · {Math.round(DELTA_SCORE)}
+        </div>
       )}
     </div>
   );
-};
+}
 
+// ─── SLIDER ───────────────────────────────────────────────────────────────────
+function Slider({label, provLabel, sub, value, onChange, color, leftLabel, rightLabel}) {
+  return (
+    <div style={{marginBottom:26}}>
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6}}>
+        <div style={{flex:1, paddingRight:14}}>
+          <div style={{fontSize:11, fontWeight:700, color:"#0f172a", letterSpacing:0.2}}>{label}</div>
+          <div style={{fontSize:10, fontWeight:600, color, marginTop:2}}>{provLabel}</div>
+          <div style={{fontSize:10, color:"#94a3b8", marginTop:3, lineHeight:1.6}}>{sub}</div>
+        </div>
+        <div style={{fontSize:22, fontWeight:900, color, fontFamily:"'DM Mono',monospace",
+          lineHeight:1, flexShrink:0, transition:"color 0.3s"}}>{value}</div>
+      </div>
+      <input type="range" min="0" max="100" value={value}
+        onChange={e=>onChange(Number(e.target.value))}
+        style={{width:"100%", height:4, appearance:"none", borderRadius:2, outline:"none", cursor:"pointer",
+          background:`linear-gradient(to right,${color} ${value}%,#e2e8f0 ${value}%)`,
+          transition:"background 0.1s"}}/>
+      <div style={{display:"flex", justifyContent:"space-between", marginTop:3}}>
+        <span style={{fontSize:9, color:"#d1d5db"}}>{leftLabel}</span>
+        <span style={{fontSize:9, color:"#d1d5db"}}>{rightLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── BAR ──────────────────────────────────────────────────────────────────────
+function Bar({label, value, color}) {
+  return (
+    <div style={{marginBottom:8}}>
+      <div style={{display:"flex", justifyContent:"space-between", marginBottom:3}}>
+        <span style={{fontSize:10, color:"#94a3b8"}}>{label}</span>
+        <span style={{fontSize:10, color, fontWeight:700, fontFamily:"'DM Mono',monospace"}}>{Math.round(value)}</span>
+      </div>
+      <div style={{height:4, background:"#f1f5f9", borderRadius:2, overflow:"hidden"}}>
+        <div style={{height:"100%", width:`${value}%`, background:color,
+          borderRadius:2, transition:"width 0.4s ease"}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [expanded, setExpanded] = useState(null);
-  const [sortBy, setSortBy] = useState("covid");
-  const [sortDir, setSortDir] = useState("desc");
+  const [sl, setSl] = useState({gini:32, industrial:22, stateLed:28, spending:23});
+  const [ap, setAp] = useState("statusquo");
+  const [showDelta, setShowDelta] = useState(false);
 
-  const handleSort = (key) => {
-    if (sortBy === key) setSortDir(d => d === "desc" ? "asc" : "desc");
-    else { setSortBy(key); setSortDir("desc"); }
+  const r = compute(sl);
+  const sc = r.score;
+  const color   = sc>=70?"#16a34a":sc>=45?"#d97706":"#dc2626";
+  const statusLabel = sc>=70?"SISTEM SIAP":sc>=45?"WASPADA — RENTAN":"KRITIS — AKAN KOLAPS";
+
+  const applyPreset = k => {
+    const p=PRESETS[k];
+    setSl({gini:p.gini,industrial:p.industrial,stateLed:p.stateLed,spending:p.spending});
+    setAp(k);
+  };
+  const upd = k => v => { setSl(s=>({...s,[k]:v})); setAp(null); };
+
+  const FLOWS = {
+    statusquo:    [["Gini Tinggi","→","Modal Sosial Lemah"],["Industri Lemah","→","Impor & Kelangkaan"],["Modal Sosial Lemah","→","KOLAPS"],["Impor & Kelangkaan","→","KOLAPS"]],
+    developmental:[["State-Led Kuat","→","Industri Lokal"],["Industri Lokal","→","Alkes Mandiri"],["Gini Turun","→","Compliance Organik"],["Alkes Mandiri","→","RESILIENT"],["Compliance Organik","→","RESILIENT"]],
+    market:       [["Swasta Dominan","→","ICU Berbayar"],["Gini Tinggi","→","Distrust Masif"],["ICU Berbayar","→","KOLAPS"],["Distrust Masif","→","KOLAPS"]],
+    nordic:       [["Pajak Progresif","→","Gini Rendah"],["Gini Rendah","→","Kepercayaan"],["Kepercayaan","→","Compliance Organik"],["Spending Universal","→","RESILIENT"],["Compliance Organik","→","RESILIENT"]],
+  };
+  const flows = FLOWS[ap||"statusquo"];
+
+  const WARN = {
+    import:       {icon:"💸",title:"Duit terbang ke luar negeri — ~"+Math.round(sl.spending*(1-sl.industrial/100)*0.7)+"% anggaran jadi impor alkes.", tx:"#92400e",bg:"#fffbeb"},
+    polarize:     {icon:"⚡",title:"Teknologi tanpa kepercayaan — ketimpangan memblokir compliance organik.", tx:"#991b1b",bg:"#fef2f2"},
+    profitleak:   {icon:"🏥",title:"RS swasta prioritaskan profit — ICU dikosongkan untuk pasien VIP.", tx:"#7c2d12",bg:"#fff7ed"},
+    capturedspend:{icon:"🐊",title:"Anggaran besar tanpa kontrol = mangsa broker. APD mark-up 900% seperti 2020.", tx:"#6b21a8",bg:"#faf5ff"},
   };
 
-  const getVal = (row, key) => {
-    if (key === "sars") return row.sars.kena ? 1 : 0;
-    return row[key]?.skor ?? 0;
-  };
-
-  const sorted = [...data].sort((a, b) => {
-    const diff = getVal(b, sortBy) - getVal(a, sortBy);
-    return sortDir === "desc" ? diff : -diff;
-  });
-
-  const thStyle = (key) => ({
-    padding: "11px 8px", textAlign: "left", fontSize: 10,
-    letterSpacing: 0.8, whiteSpace: "nowrap", cursor: "pointer",
-    userSelect: "none", fontWeight: sortBy === key ? 700 : 600,
-    color: sortBy === key ? "#4f46e5" : "#64748b",
-    borderBottom: sortBy === key ? "2px solid #4f46e5" : "2px solid transparent",
-  });
+  const diagnoses = [];
+  const {gini:G,industrial:I,stateLed:L,spending:SP} = sl;
+  if(G<35&&I>50)  diagnoses.push({c:"#dc2626",t:"Teknologi Tanpa Kepercayaan.",    d:"Ketimpangan tinggi memblokir compliance organik — identik AS 2020."});
+  if(I<30&&SP>55) diagnoses.push({c:"#d97706",t:"Low Industrial + High Spending = Debt.",  d:"Anggaran jadi beban impor tanpa membangun kapasitas nyata."});
+  if(L>65&&I>60)  diagnoses.push({c:"#16a34a",t:"State-Led + Industrial = Surge Capacity.",d:"Sistem bisa napas saat gelombang krisis. Vietnam membuktikan ini."});
+  if(G>65&&I>55)  diagnoses.push({c:"#7c3aed",t:"Equality + Industry = Formula Paling Robust.",d:"Compliance organik + kapasitas nyata. Dikonfirmasi 20 negara."});
+  if(SP>70&&L<30) diagnoses.push({c:"#be185d",t:"Anggaran Besar = Mangsa Broker.",  d:"APD mark-up 900% seperti 2020. Uang habis, kapasitas tidak bertambah."});
+  if(diagnoses.length===0) diagnoses.push({c:"#94a3b8",t:"Geser slider untuk aktivasi diagnosis.",d:"Setiap kombinasi kebijakan punya konsekuensi sistemik yang berbeda."});
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: "'Inter', sans-serif", padding: "28px 20px" }}>
+    <div style={{minHeight:"100vh",background:"#f8fafc",fontFamily:"'Plus Jakarta Sans',sans-serif",color:"#0f172a",display:"flex",flexDirection:"column"}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-        .row-tr { cursor: pointer; transition: background 0.1s; }
-        .row-tr:hover td { background: #f0f4ff !important; }
-        .sort-th:hover { color: #4f46e5 !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0;}
+        input[type=range]{-webkit-appearance:none;appearance:none;}
+        input[type=range]::-webkit-slider-thumb{
+          -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:white;
+          cursor:pointer;border:2px solid #d1d5db;box-shadow:0 1px 4px rgba(0,0,0,0.12);
+          transition:box-shadow .15s,transform .1s;}
+        input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 2px 8px rgba(0,0,0,0.2);transform:scale(1.1);}
+        input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:white;cursor:pointer;border:2px solid #d1d5db;}
+        .pbtn{transition:all .15s;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+        .pbtn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,0.1);}
+        .fadein{animation:fi .25s ease;}
+        @keyframes fi{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+        ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px;}
       `}</style>
 
-      <div style={{ maxWidth: 1700, margin: "0 auto" }}>
-
-        {/* Header */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 10, letterSpacing: 3, color: "#6366f1", fontWeight: 700, marginBottom: 4, textTransform: "uppercase" }}>
-            Framework Analisis COVID-19
+      {/* ── HEADER ─────────────────────────────────────────────── */}
+      <div style={{background:"white",borderBottom:"1px solid #e8ecf0",padding:"16px 36px",
+        display:"flex",alignItems:"center",justifyContent:"space-between",gap:20,flexWrap:"wrap",
+        boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        <div>
+          <div style={{fontSize:9,letterSpacing:3.5,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+            textTransform:"uppercase",marginBottom:5}}>
+            Crisis Preparedness Simulator · Indonesia 2029
           </div>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(20px, 3vw, 34px)", fontWeight: 700, margin: "0 0 6px", color: "#0f172a", lineHeight: 1.2 }}>
-            Kenapa Negara Berhasil atau Gagal<br />
-            <span style={{ color: "#4f46e5" }}>Menangani COVID-19</span>
+          <h1 style={{fontSize:"clamp(15px,1.8vw,21px)",fontWeight:700,color:"#0f172a",lineHeight:1.3,letterSpacing:-0.3}}>
+            Jika Pandemi Baru Terjadi Besok —&nbsp;
+            <span style={{fontWeight:300,color:"#94a3b8"}}>Apakah Sistem Kita Akan Bertahan?</span>
           </h1>
-          <p style={{ color: "#64748b", fontSize: 12, margin: 0, maxWidth: 560, lineHeight: 1.7 }}>
-            20 negara. Klik header untuk mengurutkan. Klik baris untuk membaca analisis.
-            <span style={{ color: "#0284c7", marginLeft: 8 }}>⚠️ = anomali demografis</span>
-          </p>
         </div>
-
-        {/* Legend */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, padding: "8px 14px", background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 1 }}>SKALA SKOR:</span>
-          {[
-            { s: 5, label: "Sangat Kuat/Baik" }, { s: 4, label: "Kuat/Baik" },
-            { s: 3, label: "Menengah" }, { s: 2, label: "Lemah/Buruk" }, { s: 1, label: "Sangat Lemah/Buruk" },
-          ].map(i => {
-            const c = skorColor(i.s);
-            return (
-              <div key={i.s} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: c.bg, border: `1px solid ${c.bd}` }} />
-                <span style={{ fontSize: 10, color: "#64748b" }}>{i.label}</span>
-              </div>
-            );
-          })}
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#ccfbf1", border: "1px solid #5eead4" }} />
-            <span style={{ fontSize: 10, color: "#64748b" }}>Social mobility tinggi (teal)</span>
-          </div>
-          <div style={{ width: 1, height: 12, background: "#e2e8f0" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#ede9fe", border: "1px solid #c4b5fd" }} />
-            <span style={{ fontSize: 10, color: "#64748b" }}>Usia muda (ungu)</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#dbeafe", border: "1px solid #93c5fd" }} />
-            <span style={{ fontSize: 10, color: "#64748b" }}>Pernah kena SARS</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#e0f2fe", border: "1px solid #7dd3fc" }} />
-            <span style={{ fontSize: 10, color: "#64748b" }}>⚠️ Anomali (lebih baik dari prediksi)</span>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: "auto", background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                <th style={{ padding: "11px 14px", textAlign: "left", fontSize: 10, letterSpacing: 1, color: "#64748b", fontWeight: 700, position: "sticky", left: 0, background: "#f8fafc", zIndex: 2, minWidth: 140, borderRight: "1px solid #f1f5f9" }}>
-                  NEGARA
-                </th>
-                {COLS.map(c => (
-                  <th key={c.key} className="sort-th" style={thStyle(c.key)} onClick={() => handleSort(c.key)}>
-                    {c.label} {sortBy === c.key ? (sortDir === "desc" ? "↓" : "↑") : ""}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((row, i) => {
-                const isExp = expanded === row.negara;
-                const bg = isExp ? "#f8fafc" : i % 2 === 0 ? "#fff" : "#fafafa";
-                const dotColor = covidColor(row.covid.skor, row.covid.anomali).dot;
-                return (
-                  <>
-                    <tr key={row.negara} className="row-tr"
-                      onClick={() => setExpanded(isExp ? null : row.negara)}
-                      style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "9px 14px", position: "sticky", left: 0, zIndex: 1, background: bg, borderRight: "1px solid #f1f5f9", borderLeft: `3px solid ${dotColor}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                          <span style={{ fontSize: 18 }}>{row.flag}</span>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>{row.negara}</span>
-                          <span style={{ color: "#cbd5e1", fontSize: 9 }}>{isExp ? "▲" : "▼"}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.historis.label} sub={row.historis.sub} skor={row.historis.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.ketimpangan.label} sub={row.ketimpangan.sub} skor={row.ketimpangan.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.socialMobility.label} sub={row.socialMobility.sub} skor={row.socialMobility.skor} type="mobility" /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.strukturKerja.label} sub={row.strukturKerja.sub} skor={row.strukturKerja.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.infrastruktur.label} sub={row.infrastruktur.sub} skor={row.infrastruktur.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.healthSpending.label} sub={row.healthSpending.sub} skor={row.healthSpending.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><SarsCell d={row.sars} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.nakes.label} sub={row.nakes.sub} skor={row.nakes.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.bedRatio.label} sub={row.bedRatio.sub} skor={row.bedRatio.skor} /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><Cell label={row.medianUsia.label} sub={row.medianUsia.sub} skor={row.medianUsia.skor} type="age" /></td>
-                      <td style={{ padding: "9px 8px", background: bg }}><CovidCell d={row.covid} /></td>
-                    </tr>
-                    {isExp && (
-                      <tr key={`${row.negara}-exp`}>
-                        <td colSpan={12} style={{ padding: "0 14px 12px", background: "#f8fafc" }}>
-                          <div style={{ padding: "12px 16px", background: "#fff", border: "1px solid #e2e8f0", borderLeft: `4px solid ${dotColor}`, borderRadius: "0 8px 8px 0", fontSize: 12, color: "#475569", lineHeight: 1.8 }}>
-                            <span style={{ color: "#4f46e5", fontWeight: 700, fontSize: 10, letterSpacing: 1.5, marginRight: 10 }}>ANALISIS</span>
-                            {row.catatan}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Insight cards */}
-        <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-          {[
-            { icon: "💰", color: "#4f46e5", title: "Spending ≠ Outcome", desc: "AS spending $11.072/kapita (tertinggi dunia) tapi outcome terburuk di antara negara maju. Kuba $971/kapita tapi outcome baik. Rusia $524 + bed ratio tinggi tapi sangat buruk." },
-            { icon: "🇷🇺", color: "#dc2626", title: "Paradoks Soviet: Rusia", desc: "Bed ratio tinggi warisan Semashko — tapi lapuk dan terdegradasi. Sputnik V dikembangkan lebih awal dari Pfizer, tapi vaksinasi domestik hanya 50%. Rakyat tidak percaya vaksin buatan pemerintahnya sendiri." },
-            { icon: "⚠️", color: "#0284c7", title: "Anomali Demografis", desc: "Pakistan, Bangladesh, Nigeria: semua variabel merah tapi outcome lebih baik dari prediksi. Penjelasan terkuat: median usia 18-28 tahun (IFR mendekati nol) + underreporting masif." },
-            { icon: "🪜", color: "#0d9488", title: "Social Mobility: Paradoks UK, AS, Rusia", desc: "UK (75.4), AS (70.4), Rusia (64.3) punya social mobility tinggi tapi COVID outcome buruk. Ini karena WEF mengukur peluang struktural — bukan kepercayaan sosial horizontal. Mobility tinggi tapi trust rendah = tidak membantu saat pandemi." },
-          ].map(item => (
-            <div key={item.title} style={{ background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${item.color}`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 18, marginBottom: 5 }}>{item.icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", marginBottom: 5 }}>{item.title}</div>
-              <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.65 }}>{item.desc}</div>
-            </div>
+        <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+          {Object.entries(PRESETS).map(([k,p])=>(
+            <button key={k} className="pbtn" onClick={()=>applyPreset(k)} style={{
+              padding:"6px 13px",borderRadius:8,fontSize:10,fontWeight:700,
+              background:ap===k?p.c+"12":"white",
+              color:ap===k?p.c:"#94a3b8",
+              border:`1.5px solid ${ap===k?p.c:"#e2e8f0"}`,
+            }}>
+              {p.label}
+              <span style={{display:"block",fontSize:8,fontWeight:400,opacity:0.6,marginTop:1}}>{p.sub}</span>
+            </button>
           ))}
         </div>
+      </div>
 
-        <div style={{ marginTop: 12, fontSize: 10, color: "#94a3b8", textAlign: "center" }}>
-          Data: World Bank 2019 · WHO Health Workforce · OECD/WHO bed ratio · UN Population Division · WEF Global Social Mobility Index 2020 · The Economist excess mortality model.
-          Klik header untuk mengurutkan · Klik baris untuk analisis.
+      {/* Preset note */}
+      {ap && (
+        <div style={{background:PRESETS[ap].c+"0c",borderBottom:`1px solid ${PRESETS[ap].c}1a`,
+          padding:"7px 36px",fontSize:11,color:"#475569",lineHeight:1.7}}>
+          <span style={{fontWeight:700,color:PRESETS[ap].c}}>{PRESETS[ap].label}: </span>
+          {PRESETS[ap].note}
+        </div>
+      )}
+
+      {/* ── MAIN 40/60 ─────────────────────────────────────────── */}
+      <div style={{display:"grid",gridTemplateColumns:"40% 60%",flex:1}}>
+
+        {/* ═══ LEFT 40%: SLIDERS ════════════════════════════════ */}
+        <div style={{background:"#f1f5f9",borderRight:"1px solid #e2e8f0",
+          padding:"28px 30px",overflowY:"auto"}}>
+          <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+            textTransform:"uppercase",marginBottom:24}}>Input Kebijakan</div>
+
+          <Slider label="PEMERATAAN (GINI)"   provLabel="→ Resiliensi Akar Rumput"
+            sub="Pajak progresif, jaring pengaman. Gini rendah = modal sosial tidak kolaps — rakyat patuh secara organik."
+            value={sl.gini}       onChange={upd("gini")}       color="#7c3aed" leftLabel="Timpang" rightLabel="Merata"/>
+          <Slider label="BASIS INDUSTRI"        provLabel="→ Kedaulatan Alat Hidup"
+            sub="Pabrik ventilator, APD, obat lokal. Tanpa ini: krisis = impor darurat harga 10× lipat."
+            value={sl.industrial} onChange={upd("industrial")} color="#0284c7" leftLabel="Impor semua" rightLabel="Mandiri"/>
+          <Slider label="STATE-LED DIRECTION"   provLabel="→ Kontrol vs Profit"
+            sub="Negara kendalikan RS swasta saat darurat. Tanpa kontrol: ICU dikosongkan untuk pasien VIP."
+            value={sl.stateLed}   onChange={upd("stateLed")}   color="#4f46e5" leftLabel="Pasar bebas" rightLabel="Negara pimpin"/>
+          <Slider label="HEALTH SPENDING"       provLabel="→ Hanya Efektif Jika Struktur Benar"
+            sub="Kuba $971/kapita: baik. AS $11.072/kapita: terburuk negara maju. Struktur yang menentukan."
+            value={sl.spending}   onChange={upd("spending")}   color="#0891b2" leftLabel="Minimal" rightLabel="Masif"/>
+
+          {/* Warnings */}
+          {r.warnings.length>0 && (
+            <div style={{marginTop:4}}>
+              <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+                textTransform:"uppercase",marginBottom:10}}>Warning Aktif</div>
+              {r.warnings.map(w=>{const wd=WARN[w];return(
+                <div key={w} className="fadein" style={{background:wd.bg,borderRadius:8,
+                  padding:"9px 12px",marginBottom:7,display:"flex",gap:8,alignItems:"flex-start"}}>
+                  <span style={{fontSize:13,flexShrink:0,marginTop:1}}>{wd.icon}</span>
+                  <span style={{fontSize:10,color:wd.tx,lineHeight:1.6}}>{wd.title}</span>
+                </div>
+              );})}
+            </div>
+          )}
+
+          {/* Legend */}
+          <div style={{marginTop:28,paddingTop:22,borderTop:"1px dashed #e2e8f0"}}>
+            <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+              textTransform:"uppercase",marginBottom:12}}>Legenda Skor</div>
+            {[["0–30","Collapse","#dc2626"],["31–44","Kritis","#ea580c"],
+              ["45–59","Waspada","#d97706"],["60–74","Resilient","#65a30d"],["75–100","Siap","#16a34a"]].map(([rng,lbl,c])=>(
+              <div key={rng} style={{display:"flex",alignItems:"center",gap:9,marginBottom:7}}>
+                <div style={{width:22,height:4,background:c,borderRadius:2,flexShrink:0}}/>
+                <span style={{fontSize:10,color:"#64748b"}}>
+                  <span style={{color:c,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>{rng}</span>&ensp;{lbl}
+                </span>
+              </div>
+            ))}
+            <div style={{marginTop:16,fontSize:9,color:"#cbd5e1",fontFamily:"'DM Mono',monospace",lineHeight:1.9}}>
+              Model: Ostrom · Putnam<br/>Ha-Joon Chang · Marmot
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ RIGHT 60%: RESULTS ══════════════════════════════ */}
+        <div style={{padding:"28px 32px",overflowY:"auto",background:"white"}}>
+
+          {/* Status headline */}
+          <div style={{textAlign:"center",marginBottom:4}}>
+            <div style={{fontSize:9,letterSpacing:3.5,color:color+"99",
+              fontFamily:"'DM Mono',monospace",textTransform:"uppercase",marginBottom:6}}>
+              Survival Probability
+            </div>
+            <div style={{fontSize:18,fontWeight:900,color,fontFamily:"'DM Mono',monospace",
+              letterSpacing:1.5,transition:"color 0.4s",lineHeight:1.2}}>
+              {statusLabel}
+            </div>
+            {sc<45&&(
+              <div className="fadein" style={{fontSize:10,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>
+                Tanpa perubahan struktural, skenario Juli 2021 akan terulang atau lebih buruk.
+              </div>
+            )}
+          </div>
+
+          {/* THE ORB */}
+          <SystemicOrb score={sc} showDelta={showDelta} sliders={sl}/>
+
+          {/* Delta toggle */}
+          <div style={{textAlign:"center",marginTop:0,marginBottom:20}}>
+            <button onClick={()=>setShowDelta(d=>!d)} className="pbtn" style={{
+              padding:"7px 18px",borderRadius:7,fontSize:10,
+              background:showDelta?"#fee2e2":"#f8fafc",
+              border:`1.5px solid ${showDelta?"#fca5a5":"#e2e8f0"}`,
+              color:showDelta?"#dc2626":"#94a3b8",
+              fontFamily:"'DM Mono',monospace",fontWeight:700,letterSpacing:0.5,
+            }}>
+              {showDelta?"▲ SEMBUNYIKAN HANTU DELTA":"▼ TAMPILKAN HANTU DELTA JULI 2021"}
+            </button>
+            {showDelta&&(
+              <div className="fadein" style={{marginTop:6,fontSize:10,color:"#dc2626",lineHeight:1.7,
+                background:"#fff1f2",border:"1px solid #fecdd3",borderRadius:7,
+                padding:"7px 14px",display:"inline-block"}}>
+                <strong style={{fontFamily:"'DM Mono',monospace"}}>Jul'21 · skor {Math.round(DELTA_SCORE)}</strong>
+                &ensp;·&ensp;1.700 kematian/hari · RS overload 120%+ · Oksigen habis di Jawa
+                <div style={{marginTop:3,fontWeight:700}}>
+                  {sc>=60?"✓ Sistem mampu menahan gelombang setara Delta."
+                    :sc>=40?"⚠ ICU kemungkinan overload — tidak kolaps total."
+                    :"✗ Skenario Juli 2021 akan terulang atau lebih buruk."}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Metric bars */}
+          <div style={{background:"#f8fafc",borderRadius:12,padding:"14px 18px",marginBottom:16,
+            border:"1px solid #f1f5f9"}}>
+            <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+              textTransform:"uppercase",marginBottom:12}}>Breakdown Komponen</div>
+            <Bar label="Kepatuhan Rakyat"   value={r.compliance}    color="#7c3aed"/>
+            <Bar label="Rantai Pasok Alkes"  value={r.supplyChain}   color="#0284c7"/>
+            <Bar label="Kesehatan Fiskal"    value={r.fiscalHealth}  color="#0891b2"/>
+            <Bar label="Kapasitas Surge ICU" value={r.surgeCapacity} color="#4f46e5"/>
+          </div>
+
+          {/* Flow + Diagnosis */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+
+            {/* Causal flow — pure text, no boxes */}
+            <div>
+              <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+                textTransform:"uppercase",marginBottom:12}}>Diagram Kausalitas</div>
+              {flows.map(([from,arr,to],i)=>{
+                const isResult = to==="KOLAPS"||to==="RESILIENT";
+                const rc = to==="KOLAPS"?"#dc2626":"#16a34a";
+                return (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:5,marginBottom:7}}>
+                    <span style={{fontSize:10,color:"#64748b"}}>{from}</span>
+                    <span style={{color:"#d1d5db",fontSize:11,flexShrink:0}}>→</span>
+                    <span style={{fontSize:10,fontWeight:isResult?800:400,
+                      color:isResult?rc:"#64748b",
+                      fontFamily:isResult?"'DM Mono',monospace":"inherit"}}>{to}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* X-Ray Diagnosis */}
+            <div>
+              <div style={{fontSize:9,letterSpacing:3,color:"#94a3b8",fontFamily:"'DM Mono',monospace",
+                textTransform:"uppercase",marginBottom:12}}>Diagnosis X-Ray</div>
+              {diagnoses.map((d,i)=>(
+                <div key={i} style={{borderLeft:`2px solid ${d.c}`,paddingLeft:10,marginBottom:10}}>
+                  <div style={{fontSize:10,fontWeight:800,color:d.c,
+                    fontFamily:"'DM Mono',monospace",lineHeight:1.4,marginBottom:2}}>{d.t}</div>
+                  <div style={{fontSize:10,color:"#64748b",lineHeight:1.65}}>{d.d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
